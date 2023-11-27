@@ -1,0 +1,37 @@
+{% extends 'app/home.html' %}
+{% block contenido %}
+{% load static %}
+
+<div class="container mt-5">
+    <h2 class="mb-4">Lista de Pacientes</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Nombre</th>
+                <th scope="col">Previsión</th>
+                <th scope="col">Ciudad</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for agenda in agendas %}
+                <tr>
+                    <td>{{ agenda.RutPaciente.Nombres }} {{ agenda.RutPaciente.ApePat }} {{ agenda.RutPaciente.ApeMat }}</td>
+                    <td>{{ agenda.RutPaciente.IDPrevision }}</td>
+                    <td>{{ agenda.RutPaciente.IdCiudad }}</td>
+                    <td style="{% if agenda.Estado %}color: green; font-weight: bold;{% else %}color: red; font-weight: bold;{% endif %}">
+                        {% if agenda.Estado %}Pagado{% else %}Por pagar{% endif %}
+                    </td>
+                    <td>
+                        {% if not agenda.RutPaciente.Email %} No tiene email  {%else%} {{ agenda.RutPaciente.Email }}{% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+</div>
+
+
+{% endblock %}

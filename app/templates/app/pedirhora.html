@@ -1,0 +1,123 @@
+{% extends 'app/home.html' %}
+{% block contenido %}
+{% load crispy_forms_tags %}    
+{% load static %}
+<script>
+    var feriados = {{ feriados|safe }};
+    console.log(feriados);
+</script>
+<div class="container mt-4">
+    <h2>Reserva tu hora medica con nuestros profesionales de la salud.</h2>
+    <p>Servicios de alta calidad para tu bienestar.</p>
+    
+    <div class="card mt-4">
+        <div class="card-header bg-info text-white">
+            Reservar una cita
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{% url 'agendar' %}" id="formulario">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="RutPaciente">RUT del Paciente:</label>
+                    <input type="text" class="form-control" name="RutPaciente" id="RutPaciente" value="{{ rut_paciente }}" readonly>
+                    <div id="rut-validation-result">{{ error_message }}</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="RutProfesional">Profesional:</label>
+                    <select class="form-control" name="RutProfesional" id="RutProfesional">
+                        {% for prof in profesionales %}
+                            <option value="{{ prof.Rut }}">{{ prof.Nombres }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="FechaAtencion">Fecha:</label>
+                    <input type="date" class="form-control" name="FechaAtencion" id="FechaAtencion">
+                </div>
+                <div class="form-group">
+                    <label for="Tarifa">Tarifa:</label>
+                    <input type="text" class="form-control" name="Tarifa" id="Tarifa" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="IdBloque">Bloques Disponibles:</label>
+                    <select class="form-control" name="IdBloque" id="IdBloque">
+
+                    </select>
+                </div>
+                <button type="submit" name="action" value="reservar" class="btn btn-primary">Reservar cita</button>
+                <a href="{% url 'reservas' %}" ><span class="material-symbols-outlined">
+                    view_agenda
+                    </span>Ver mis reservas</button>
+            </form>
+            
+        </div>
+    </div>    
+</div>
+<script>
+    $(document).ready(function() {
+        $('#RutProfesional').change(function() {
+            var url = "{% url 'fetch_bloques' %}";
+            var rut_profesional = $(this).val();
+    
+            $.ajax({
+                url: url,
+                data: {
+                    'rut_profesional': rut_profesional
+                },
+                success: function(data) {
+                    var select = $('#IdBloque');
+                    select.empty();
+                    $.each(data.bloques, function(index, value) {
+                        select.append('<option value="' + value.id + '">' + value.Descripcion + '</option>');
+                    });
+                    $('#Tarifa').val(data.tarifa);
+                }
+            });
+        });
+    });
+    </script>
+    <script>
+        $(document).ready(function() {
+            var boton = $('button[type="submit"]');
+            boton.prop('disabled', true);  // Deshabilita el botón de envío al cargar la página
+        
+            $('#FechaAtencion').change(async function() {
+                var fechaSeleccionada = $('#FechaAtencion').val();
+                var partesFecha = fechaSeleccionada.split('-');
+                var fechaFormateada = partesFecha[0] + '-' + 
+                    ('0' + partesFecha[1]).slice(-2) + '-' + 
+                    ('0' + partesFecha[2]).slice(-2);
+        
+                console.log('Fecha seleccionada: ' + fechaFormateada);  // Imprime la fecha seleccionada
+        
+                var response = await fetch('https://api.victorsanmartin.com/feriados/en.json');
+                var data = await response.json();
+                var feriados = data;
+                var feriado = false;
+        
+                for (var i = 0; i < feriados.data.length; i++) {
+                    if (feriados.data[i].date === fechaFormateada) {
+                        feriado = true;
+                        console.log('La fecha seleccionada es un día feriado: ' + feriados.data[i].title);  // Imprime el título del día feriado
+                        alert('La fecha seleccionada es un día feriado: ' + feriados.data[i].title);
+                        break;
+                    }
+                }
+        
+                if (!feriado) {
+                    // La fecha no es un día feriado, habilita el botón de envío
+                    boton.prop('disabled', false);
+                } else {
+                    // La fecha es un día feriado, mantiene el botón de envío deshabilitado
+                    boton.prop('disabled', true);
+                }
+            });
+        });
+        
+        
+    </script>
+    
+
+    
+    {% endblock %}
